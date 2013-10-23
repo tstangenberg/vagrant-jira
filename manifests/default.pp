@@ -8,88 +8,52 @@ define append_if_no_such_line($file, $line, $refreshonly = 'false') {
 
 class jira {
   include java
-}
 
-class must-have {
-  include apt
-  apt::ppa { "ppa:webupd8team/java": }
-
-  exec { 'apt-get update':
-    command => '/usr/bin/apt-get update',
-    before => Apt::Ppa["ppa:webupd8team/java"],
-  }
-
-  exec { 'apt-get update 2':
-    command => '/usr/bin/apt-get update',
-    require => [ Apt::Ppa["ppa:webupd8team/java"], Package["git-core"] ],
-  }
-
-  package { ["vim",
-             "curl",
-             "git-core",
-             "bash"]:
-    ensure => present,
-    require => Exec["apt-get update"],
-    before => Apt::Ppa["ppa:webupd8team/java"],
-  }
-
-  package { ["oracle-java7-installer"]:
-    ensure => present,
-    require => Exec["apt-get update 2"],
-  }
-
-  exec {
-    "accept_license":
-    command => "echo debconf shared/accepted-oracle-license-v1-1 select true | sudo debconf-set-selections && echo debconf shared/accepted-oracle-license-v1-1 seen true | sudo debconf-set-selections",
-    cwd => "/home/vagrant",
-    user => "vagrant",
-    path    => "/usr/bin/:/bin/",
-    require => Package["curl"],
-    before => Package["oracle-java7-installer"],
-    logoutput => true,
-  }
+  $jira-archive = "http://www.atlassian.com/software/jira/downloads/binary/atlassian-jira-6.1.1.tar.gz"
+  $jira-app = "/vagrant/atlassian-jira-6.1.1-standalone"
+  $jira-home = "/vagrant/jira-home"
+  $jira-start = "$jira-app/bin/start-jira.sh"
 
   exec {
     "download_jira":
-    command => "curl -L http://www.atlassian.com/software/jira/downloads/binary/atlassian-jira-6.1.1.tar.gz | tar zx",
+    command => "curl -L $jira-archive | tar zx",
     cwd => "/vagrant",
     user => "vagrant",
     path    => "/usr/bin/:/bin/",
-    require => Exec["accept_license"],
     logoutput => true,
-    creates => "/vagrant/atlassian-jira-6.1.1",
+    timeout => 0,
+    creates => "$jira-app",
   }
 
-  exec {
+ exec {
     "create_jira_home":
-    command => "mkdir -p /vagrant/jira-home",
+    command => "mkdir -p $jira-home",
     cwd => "/vagrant",
     user => "vagrant",
     path    => "/usr/bin/:/bin/",
     require => Exec["download_jira"],
     logoutput => true,
-    creates => "/vagrant/jira-home",
+    creates => "$jira-home",    
   }
 
   exec {
     "start_jira_in_background":
-    environment => "JIRA_HOME=/vagrant/jira-home",
-    command => "/vagrant/atlassian-jira-6.1.1/bin/start-jira.sh &",
+    environment => "JIRA_HOME=$jira-home",
+    command => "$jira-start &",
     cwd => "/vagrant",
     user => "vagrant",
     path    => "/usr/bin/:/bin/",
-    require => [ Package["oracle-java7-installer"],
-                 Exec["accept_license"],
-                 Exec["download_jira"],
+    require => [ Package["java"],
                  Exec["create_jira_home"] ],
     logoutput => true,
   }
 
   append_if_no_such_line { motd:
     file => "/etc/motd",
-    line => "Run jira with: JIRA_HOME=/vagrant/jira-home /vagrant/atlassian-jira-6.1.1/bin/start-jira.sh",
+    line => "Run jira with: JIRA_HOME=$jira-home $jira-start",
     require => Exec["start_jira_in_background"],
   }
+
 }
 
 include jira
