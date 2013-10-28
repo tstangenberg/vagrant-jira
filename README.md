@@ -24,19 +24,20 @@ cd vagrant-jira
 ```
 
 1. Start up and provision automatically all dependencies in the vm
-	`vagrant up --provision` 
+
+```
+vagrant up --provision
+```
+
 1. *** You're almost DONE! *** --> open the [jira setup page][8] (http://localhost:8080/setup) & configure it
 
 
 
-[1]: https://www.atlassian.com/software/stash/overview
+[1]: https://www.atlassian.com/software/jira/overview
 [2]: http://www.vagrantup.com/
 [3]: http://puppetlabs.com/
 [4]: https://www.virtualbox.org 
 [5]: http://git-scm.com
-[6]: http://jdk7.java.net
+[6]: http://openjdk.java.net/
 [7]: http://www.iterm2.com
-[8]: http://localhost:7990
-[9]: https://bitbucket.org/durdn
-[10]: https://bitbucket.org/durdn/stash-vagrant-install.git
-[11]: https://blogs.atlassian.com/2013/03/instant-java-provisioning-with-vagrant-and-puppet-stash-one-click-install
+[8]: http://localhost:8080
